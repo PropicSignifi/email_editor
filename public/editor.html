@@ -106,7 +106,20 @@
         },
       };
 
+      var userContext = [
+          {
+              name: 'title',
+              label: 'Title',
+              type: 'Text',
+              value: 'Sample Title',
+          },
+      ];
+
       function save(code, onSuccess, onError) {
+        onSuccess();
+      }
+
+      function saveUserContext(userContext, onSuccess, onError) {
         onSuccess();
       }
 
@@ -122,6 +135,8 @@
           'gjs-mjml': {
             context: context,
             save: save,
+            userContext: userContext,
+            saveUserContext: saveUserContext,
             readOnly: false,
           }
         }
