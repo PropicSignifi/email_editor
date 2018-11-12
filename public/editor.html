@@ -115,11 +115,23 @@
           },
       ];
 
+      var userBlocks = [
+        {
+          id: '1',
+          name: 'Title',
+          content: '<mj-raw><h1>Title</h1></mj-raw>',
+        },
+      ];
+
       function save(code, onSuccess, onError) {
         onSuccess();
       }
 
       function saveUserContext(userContext, onSuccess, onError) {
+        onSuccess();
+      }
+
+      function saveUserBlock(userBlock, onSuccess, onError) {
         onSuccess();
       }
 
@@ -138,6 +150,8 @@
             userContext: userContext,
             saveUserContext: saveUserContext,
             readOnly: false,
+            userBlocks,
+            saveUserBlock,
           }
         }
       });
