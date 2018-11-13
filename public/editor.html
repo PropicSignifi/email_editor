@@ -16,6 +16,14 @@
       .gjs-layer-vis {
           display: none;
       }
+
+      .gjs-am-file-uploader {
+          display: none;
+      }
+
+      .gjs-am-assets-cont {
+          width: 100%;
+      }
     </style>
   </head>
   <body>
@@ -135,6 +143,10 @@
         onSuccess();
       }
 
+      function deleteUserBlock(name, onSuccess, onError) {
+        onSuccess();
+      }
+
       var editor = grapesjs.init({
         height: '100%',
         noticeOnUnload: 0,
@@ -152,6 +164,7 @@
             readOnly: false,
             userBlocks,
             saveUserBlock,
+            deleteUserBlock,
           }
         }
       });
