@@ -1,0 +1,14 @@
+{
+  "name": "email-editor",
+  "version": "0.0.1",
+  "private": true,
+  "dependencies": {
+    "aws-sdk": "latest",
+    "express": "latest",
+    "body-parser": "latest",
+    "jsforce": "latest"
+  },
+  "scripts": {
+    "start": "node app.js"
+  }
+}
