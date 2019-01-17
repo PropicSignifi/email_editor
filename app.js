@@ -26,6 +26,7 @@ if (cluster.isMaster) {
     var AWS = require('aws-sdk');
     var express = require('express');
     var bodyParser = require('body-parser');
+    var salesforce = require('./salesforce');
 
     AWS.config.region = process.env.REGION
 
@@ -37,8 +38,23 @@ if (cluster.isMaster) {
     var app = express();
 
     app.use(bodyParser.urlencoded({extended:false}));
-
     app.use(express.static('public'));
+
+    app.get("/auth/login", (req, res) =>
+        res.redirect(salesforce
+            .oAuth()
+            .getAuthorizationUrl({
+                scope: "api id web refresh_token"})));
+
+    app.get("/token", (req, res) => {
+        salesforce.authorize(req.query.code)
+        .then(() => {
+            console.log('resolve');
+            res.redirect('/editor.html');
+        })
+        .catch(() => {
+        });
+    });
 
     var port = process.env.PORT || 3000;
 
