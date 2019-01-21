@@ -5,6 +5,7 @@
   "dependencies": {
     "aws-sdk": "latest",
     "express": "latest",
+    "express-session": "latest",
     "body-parser": "latest",
     "jsforce": "latest"
   },
