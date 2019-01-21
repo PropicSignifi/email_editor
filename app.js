@@ -38,9 +38,11 @@ if (cluster.isMaster) {
     var snsTopic =  process.env.NEW_SIGNUP_TOPIC;
     var app = express();
 
+    app.set("view engine", "ejs");
+    app.set("views", __dirname + "/views");
+    app.use(express.static(__dirname + '/public'));
     app.use(session({secret: "Secret"}));
     app.use(bodyParser.urlencoded({extended:false}));
-    app.use(express.static('public'));
 
     const checkAuth = (req, res, next) => {
         if (!req.session.authenticated) {
@@ -64,7 +66,7 @@ if (cluster.isMaster) {
     });
 
     app.get('/', checkAuth, (req, res) => {
-        res.redirect('editor.html');
+        res.render("editor");
     });
 
     var port = process.env.PORT || 3000;

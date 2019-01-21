@@ -4,9 +4,10 @@
   "private": true,
   "dependencies": {
     "aws-sdk": "latest",
+    "body-parser": "latest",
+    "ejs": "latest",
     "express": "latest",
     "express-session": "latest",
-    "body-parser": "latest",
     "jsforce": "latest"
   },
   "scripts": {
