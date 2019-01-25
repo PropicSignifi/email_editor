@@ -60,6 +60,7 @@ if (cluster.isMaster) {
         salesforce.authorize(req.query.code)
         .then(() => {
             req.session.authenticated = true;
+            req.session.save();
             res.redirect('/');
         })
         .catch(() => {
