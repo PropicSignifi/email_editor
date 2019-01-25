@@ -132,7 +132,15 @@
       ];
 
       function save(code, onSuccess, onError) {
-        onSuccess();
+        var xhttp = new XMLHttpRequest();
+        xhttp.open("POST", "/save", true);
+        xhttp.onreadystatechange = () => {
+          if (this.readyState == 4 && this.status == 200) {
+            onSuccess();
+          }
+        }
+        xhttp.setRequestHeader("Content-type", "application/json");
+        xhttp.send(JSON.stringify({code : code}));
       }
 
       function saveUserContext(userContext, onSuccess, onError) {

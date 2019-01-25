@@ -42,6 +42,7 @@ if (cluster.isMaster) {
     app.set("views", __dirname + "/views");
     app.use(express.static(__dirname + '/public'));
     app.use(session({secret: "Secret"}));
+    app.use(bodyParser.json());
     app.use(bodyParser.urlencoded({extended:false}));
 
     const checkAuth = (req, res, next) => {
@@ -67,6 +68,11 @@ if (cluster.isMaster) {
 
     app.get('/', checkAuth, (req, res) => {
         res.render("editor");
+    });
+
+    app.post("/save", (req, res) => {
+        console.log(req.body.code);
+        res.send("OK");
     });
 
     var port = process.env.PORT || 3000;
