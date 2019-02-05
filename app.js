@@ -46,6 +46,8 @@ if (cluster.isMaster) {
     app.use(bodyParser.urlencoded({extended:false}));
 
     const checkAuth = (req, res, next) => {
+        next();
+        return;
         if (!req.session.authenticated) {
             res.redirect(salesforce
                 .oAuth()
@@ -72,7 +74,17 @@ if (cluster.isMaster) {
     });
 
     app.post("/save", (req, res) => {
-        console.log(req.body.code);
+        var s3 = new AWS.S3();
+        var template = req.body.code;
+
+        var uploadParams = {Bucket: "ctc-layouts", Body: template, Key: "test"};
+        s3.upload(uploadParams, (err, data) => {
+            if (err) {
+                console.log("Error", err);
+            } else {
+                console.log("Upload Success", data.Location);
+            }
+        })
         res.send("OK");
     });
 
