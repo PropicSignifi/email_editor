@@ -70,7 +70,17 @@ if (cluster.isMaster) {
     });
 
     app.get('/', checkAuth, (req, res) => {
-        res.render("editor");
+        var s3 = new AWS.S3();
+
+        s3.getObject({Bucket: "ctc-layouts", Key: "test"}, (err, data) => {
+            if (err) {
+                console.log("Error", err);
+            } else {
+                res.render("editor", {
+                    template: data.Body,
+                });
+            }
+        });
     });
 
     app.post("/save", (req, res) => {
