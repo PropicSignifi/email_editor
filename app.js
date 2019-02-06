@@ -25,7 +25,8 @@ if (cluster.isMaster) {
 } else {
     var AWS = require('aws-sdk');
     var express = require('express');
-    var session = require('express-session');
+    var cookieSession = require('cookie-session');
+    var cookieParser = require('cookie-parser');
     var bodyParser = require('body-parser');
     var salesforce = require('./salesforce');
 
@@ -41,16 +42,31 @@ if (cluster.isMaster) {
     app.set("view engine", "ejs");
     app.set("views", __dirname + "/views");
     app.use(express.static(__dirname + '/public'));
-    app.use(session({secret: "Secret"}));
+    app.use(cookieSession({name: "session", keys: ['secret']}));
+    app.use(cookieParser());
     app.use(bodyParser.json());
     app.use(bodyParser.urlencoded({extended:false}));
 
-    const checkAuth = (req, res, next) => {
+    const saveSession = (req, res, next) => {
+        if (req.query.bucket) {
+            req.session.bucket = req.query.bucket;
+        }
+        if (req.query.templateId) {
+            req.session.templateId = req.query.templateId;
+        }
+        if (req.query.loginUrl) {
+            req.session.loginUrl = req.query.loginUrl;
+        }
         next();
-        return;
+    };
+
+    const checkAuth = (req, res, next) => {
+        //next();
+        //return;
+
         if (!req.session.authenticated) {
             res.redirect(salesforce
-                .oAuth()
+                .oAuth(req.session.loginUrl)
                 .getAuthorizationUrl({
                     scope: "api id web refresh_token"}));
         } else {
@@ -59,20 +75,21 @@ if (cluster.isMaster) {
     };
 
     app.get("/token", (req, res) => {
-        salesforce.authorize(req.query.code)
-        .then(() => {
-            req.session.authenticated = true;
-            req.session.save();
-            res.redirect('/');
-        })
-        .catch(() => {
-        });
+        console.log(req.query.code);
+        salesforce.authorize(req.session.loginUrl, req.query.code)
+            .then(() => {
+                req.session.authenticated = true;
+                req.session.save();
+                res.redirect('/');
+            })
+            .catch(() => {
+            });
     });
 
-    app.get('/', checkAuth, (req, res) => {
+    app.get('/', saveSession, checkAuth, (req, res) => {
         var s3 = new AWS.S3();
 
-        s3.getObject({Bucket: "ctc-layouts", Key: "test"}, (err, data) => {
+        s3.getObject({Bucket: req.session.bucket, Key: "test"}, (err, data) => {
             if (err) {
                 console.log("Error", err);
             } else {
@@ -87,7 +104,7 @@ if (cluster.isMaster) {
         var s3 = new AWS.S3();
         var template = req.body.code;
 
-        var uploadParams = {Bucket: "ctc-layouts", Body: template, Key: "test"};
+        var uploadParams = {Bucket: req.session.bucket, Body: template, Key: "test"};
         s3.upload(uploadParams, (err, data) => {
             if (err) {
                 console.log("Error", err);
