@@ -13,7 +13,7 @@ const authorize = (loginUrl, code) =>
         const conn = new jsforce.Connection({oauth2: oAuth(loginUrl)});
         conn.authorize(code, (err, userInfo) => {
             if (err) {
-                console.error(err);
+                console.error("Authorization Error", err);
                 reject();
             } else {
                 resolve(userInfo);

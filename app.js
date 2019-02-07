@@ -23,20 +23,13 @@ if (cluster.isMaster) {
 
 // Code to run if we're in a worker process
 } else {
-    var AWS = require('aws-sdk');
     var express = require('express');
     var cookieSession = require('cookie-session');
     var cookieParser = require('cookie-parser');
     var bodyParser = require('body-parser');
     var salesforce = require('./salesforce');
+    var templateService = require('./template-service');
 
-    AWS.config.region = process.env.REGION
-
-    var sns = new AWS.SNS();
-    var ddb = new AWS.DynamoDB();
-
-    var ddbTable =  process.env.STARTUP_SIGNUP_TABLE;
-    var snsTopic =  process.env.NEW_SIGNUP_TOPIC;
     var app = express();
 
     app.set("view engine", "ejs");
@@ -87,32 +80,28 @@ if (cluster.isMaster) {
     });
 
     app.get('/', saveSession, checkAuth, (req, res) => {
-        var s3 = new AWS.S3();
-
-        s3.getObject({Bucket: req.session.bucket, Key: "test"}, (err, data) => {
-            if (err) {
-                console.log("Error", err);
-            } else {
-                res.render("editor", {
-                    template: data.Body,
-                });
-            }
+        templateService.getTemplate({
+            bucket: req.session.bucket,
+            orgId: '00DO000000531JPMAY',
+            templateId: req.session.templateId,
+        }).then((data) => {
+            res.render("editor", {
+                template: data,
+            });
         });
     });
 
-    app.post("/save", (req, res) => {
-        var s3 = new AWS.S3();
+    app.post("/save", checkAuth, (req, res) => {
         var template = req.body.code;
 
-        var uploadParams = {Bucket: req.session.bucket, Body: template, Key: "test"};
-        s3.upload(uploadParams, (err, data) => {
-            if (err) {
-                console.log("Error", err);
-            } else {
-                console.log("Upload Success", data.Location);
-            }
-        })
-        res.send("OK");
+        templateService.saveTemplate({
+            bucket: req.session.bucket,
+            orgId: '00DO000000531JPMAY',
+            templateId: req.session.templateId,
+            template: template,
+        }).then(() => {
+            res.send("OK");
+        });
     });
 
     var port = process.env.PORT || 3000;
