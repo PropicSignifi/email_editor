@@ -42,15 +42,7 @@ if (cluster.isMaster) {
     app.use(bodyParser.urlencoded({extended:false}));
 
     const saveSession = (req, res, next) => {
-        if (req.query.bucket) {
-            req.session.bucket = req.query.bucket;
-        }
-        if (req.query.templateId) {
-            req.session.templateId = req.query.templateId;
-        }
-        if (req.query.loginUrl) {
-            req.session.loginUrl = req.query.loginUrl;
-        }
+        _.defaultsDeep(req.session, req.query);
         next();
     };
 
@@ -67,7 +59,7 @@ if (cluster.isMaster) {
 
     const formRequestHeader = (req) => Object({
         bucket: req.session.bucket,
-        orgId: '00DO000000531JPMAY',
+        orgId: req.session.orgId,
         templateId: req.session.templateId,
     });
 
