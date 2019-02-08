@@ -29,6 +29,7 @@ if (cluster.isMaster) {
     var bodyParser = require('body-parser');
     var salesforce = require('./salesforce');
     var templateService = require('./template-service');
+    var _ = require('lodash');
 
     var app = express();
 
@@ -87,12 +88,14 @@ if (cluster.isMaster) {
         };
         var getTemplate = templateService.getTemplate(templateRequest);
         var getUserContext = templateService.getUserContext(templateRequest);
+        var getUserBlocks = templateService.getUserBlocks(templateRequest);
 
-        Promise.all([getTemplate, getUserContext])
+        Promise.all([getTemplate, getUserContext, getUserBlocks])
         .then((data) => {
             res.render("editor", {
                 template: data[0],
                 userContext: JSON.stringify(data[1]),
+                userBlocks: JSON.stringify(data[2]),
             });
         });
     });
@@ -118,9 +121,33 @@ if (cluster.isMaster) {
             orgId: '00DO000000531JPMAY',
             templateId: req.session.templateId,
             data: data,
-        }).then(() => {
+        })
+        .then(() => {
             res.send("OK");
         });
+    });
+
+    app.post("/saveUserBlock", checkAuth, (req, res) => {
+        var templateRequest = {
+            bucket: req.session.bucket,
+            orgId: '00DO000000531JPMAY',
+            templateId: req.session.templateId,
+        };
+        var block = req.body.data;
+
+        templateService.getUserBlocks(templateRequest)
+        .then(data => {
+            // Merge blocks
+            var blocks = data;
+
+            blocks = _.concat(block, blocks);
+
+            templateService.saveUserBlocks(_.set(templateRequest, 'data', blocks))
+            .then(() => {
+                res.send("OK");
+            });
+        });
+
     });
 
     var port = process.env.PORT || 3000;

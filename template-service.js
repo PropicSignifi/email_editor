@@ -45,12 +45,12 @@ const getTemplate = (req) => {
 };
 
 const saveUserContext = (req) => {
-    var key = "edm/" + req.orgId + "/" + req.templateId + ".json";
+    var key = "edm/" + req.orgId + "/" + req.templateId + ".data.json";
     return upload(req.bucket, key, JSON.stringify(req.data));
 };
 
 const getUserContext = (req) => {
-    var key = "edm/" + req.orgId + "/" + req.templateId + ".json";
+    var key = "edm/" + req.orgId + "/" + req.templateId + ".data.json";
     return download(req.bucket, key)
         .catch(() => {
             console.log("Use the demo data");
@@ -62,7 +62,29 @@ const getUserContext = (req) => {
                         "value": "Sample Title"
                     }
                 ];
-            return userContext;
+            return {Body: JSON.stringify(userContext)};
+        }).then(data => JSON.parse(data.Body));
+};
+
+const saveUserBlocks = (req) => {
+    var key = "edm/" + req.orgId + "/" + req.templateId + ".block.json";
+    return upload(req.bucket, key, JSON.stringify(req.data));
+};
+
+const getUserBlocks = (req) => {
+    var key = "edm/" + req.orgId + "/" + req.templateId + ".block.json";
+    return download(req.bucket, key)
+        .catch(() => {
+            console.log("Use the demo block");
+            var userBlocks = [
+                {
+                    id: '1',
+                    name: 'Title',
+                    content: '<mj-raw><h1>Title</h1></mj-raw>',
+                },
+            ];
+
+            return {Body: JSON.stringify(userBlocks)};
         }).then(data => JSON.parse(data.Body));
 };
 
@@ -71,6 +93,8 @@ const aws = {
     getTemplate: getTemplate,
     saveUserContext: saveUserContext,
     getUserContext: getUserContext,
+    saveUserBlocks: saveUserBlocks,
+    getUserBlocks: getUserBlocks,
 };
 
 module.exports = aws;

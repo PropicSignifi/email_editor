@@ -9,7 +9,8 @@
     "express": "latest",
     "cookie-parser": "latest",
     "cookie-session": "latest",
-    "jsforce": "latest"
+    "jsforce": "latest",
+    "lodash": "latest"
   },
   "scripts": {
     "start": "node app.js"

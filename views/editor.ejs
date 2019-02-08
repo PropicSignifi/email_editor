@@ -44,20 +44,14 @@
         },
       };
 
-      var userContext = <%- userContext %>
+      var userContext = <%- userContext %> ;
 
-      var userBlocks = [
-        {
-          id: '1',
-          name: 'Title',
-          content: '<mj-raw><h1>Title</h1></mj-raw>',
-        },
-      ];
+      var userBlocks = <%- userBlocks %> ;
 
       function post(endpoint, data, onSuccess, onError) {
         var xhttp = new XMLHttpRequest();
         xhttp.open("POST", "/" + endpoint, true);
-        xhttp.onreadystatechange = () => {
+        xhttp.onreadystatechange = function() {
           if (this.readyState == 4 && this.status == 200) {
             onSuccess();
           }
@@ -75,7 +69,7 @@
       }
 
       function saveUserBlock(userBlock, onSuccess, onError) {
-        onSuccess();
+        post("saveUserBlock", userBlock, onSuccess, onError);
       }
 
       function deleteUserBlock(name, onSuccess, onError) {
