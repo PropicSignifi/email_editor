@@ -32,7 +32,7 @@ const download = (bucket, key) =>
 
 const saveTemplate = (req) => {
     var key = "edm/" + req.orgId + "/" + req.templateId + ".mjml";
-    return upload(req.bucket, key, req.template);
+    return upload(req.bucket, key, req.data);
 };
 
 const getTemplate = (req) => {
@@ -44,11 +44,33 @@ const getTemplate = (req) => {
         }).then(data => data.Body);
 };
 
+const saveUserContext = (req) => {
+    var key = "edm/" + req.orgId + "/" + req.templateId + ".json";
+    return upload(req.bucket, key, JSON.stringify(req.data));
+};
+
+const getUserContext = (req) => {
+    var key = "edm/" + req.orgId + "/" + req.templateId + ".json";
+    return download(req.bucket, key)
+        .catch(() => {
+            console.log("Use the demo data");
+            var userContext = [
+                    {
+                        "name": "title",
+                        "label": "Title",
+                        "type": "Text",
+                        "value": "Sample Title"
+                    }
+                ];
+            return userContext;
+        }).then(data => JSON.parse(data.Body));
+};
+
 const aws = {
     saveTemplate: saveTemplate,
     getTemplate: getTemplate,
-    //saveUserContext: saveUserContext,
-    //getUserContext: getUserContext,
+    saveUserContext: saveUserContext,
+    getUserContext: getUserContext,
 };
 
 module.exports = aws;

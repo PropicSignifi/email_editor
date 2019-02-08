@@ -44,14 +44,7 @@
         },
       };
 
-      var userContext = [
-          {
-              name: 'title',
-              label: 'Title',
-              type: 'Text',
-              value: 'Sample Title',
-          },
-      ];
+      var userContext = <%- userContext %>
 
       var userBlocks = [
         {
@@ -61,20 +54,24 @@
         },
       ];
 
-      function save(code, onSuccess, onError) {
+      function post(endpoint, data, onSuccess, onError) {
         var xhttp = new XMLHttpRequest();
-        xhttp.open("POST", "/save", true);
+        xhttp.open("POST", "/" + endpoint, true);
         xhttp.onreadystatechange = () => {
           if (this.readyState == 4 && this.status == 200) {
             onSuccess();
           }
         }
         xhttp.setRequestHeader("Content-type", "application/json");
-        xhttp.send(JSON.stringify({code : code}));
+        xhttp.send(JSON.stringify({data : data}));
+      }
+
+      function save(code, onSuccess, onError) {
+        post("save", code, onSuccess, onError);
       }
 
       function saveUserContext(userContext, onSuccess, onError) {
-        onSuccess();
+        post("saveUserContext", userContext, onSuccess, onError);
       }
 
       function saveUserBlock(userBlock, onSuccess, onError) {

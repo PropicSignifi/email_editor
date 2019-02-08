@@ -80,25 +80,44 @@ if (cluster.isMaster) {
     });
 
     app.get('/', saveSession, checkAuth, (req, res) => {
-        templateService.getTemplate({
+        var templateRequest = {
             bucket: req.session.bucket,
             orgId: '00DO000000531JPMAY',
             templateId: req.session.templateId,
-        }).then((data) => {
+        };
+        var getTemplate = templateService.getTemplate(templateRequest);
+        var getUserContext = templateService.getUserContext(templateRequest);
+
+        Promise.all([getTemplate, getUserContext])
+        .then((data) => {
             res.render("editor", {
-                template: data,
+                template: data[0],
+                userContext: JSON.stringify(data[1]),
             });
         });
     });
 
     app.post("/save", checkAuth, (req, res) => {
-        var template = req.body.code;
+        var data = req.body.data;
 
         templateService.saveTemplate({
             bucket: req.session.bucket,
             orgId: '00DO000000531JPMAY',
             templateId: req.session.templateId,
-            template: template,
+            data: data,
+        }).then(() => {
+            res.send("OK");
+        });
+    });
+
+    app.post("/saveUserContext", checkAuth, (req, res) => {
+        var data = req.body.data;
+
+        templateService.saveUserContext({
+            bucket: req.session.bucket,
+            orgId: '00DO000000531JPMAY',
+            templateId: req.session.templateId,
+            data: data,
         }).then(() => {
             res.send("OK");
         });
