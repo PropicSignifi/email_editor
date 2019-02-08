@@ -150,6 +150,29 @@ if (cluster.isMaster) {
 
     });
 
+    app.post("/deleteUserBlock", checkAuth, (req, res) => {
+        var templateRequest = {
+            bucket: req.session.bucket,
+            orgId: '00DO000000531JPMAY',
+            templateId: req.session.templateId,
+        };
+
+        var name = req.body.data;
+
+        templateService.getUserBlocks(templateRequest)
+        .then(data => {
+            // Merge blocks
+            var blocks = data;
+
+            _.remove(blocks, {name: name});
+
+            templateService.saveUserBlocks(_.set(templateRequest, 'data', blocks))
+            .then(() => {
+                res.send("OK");
+            });
+        });
+    });
+
     var port = process.env.PORT || 3000;
 
     var server = app.listen(port, () => {

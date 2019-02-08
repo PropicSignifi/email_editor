@@ -73,7 +73,7 @@
       }
 
       function deleteUserBlock(name, onSuccess, onError) {
-        onSuccess();
+        post("deleteUserBlock", name, onSuccess, onError);
       }
 
       var editor = grapesjs.init({
