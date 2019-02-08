@@ -55,9 +55,6 @@ if (cluster.isMaster) {
     };
 
     const checkAuth = (req, res, next) => {
-        //next();
-        //return;
-
         if (!req.session.authenticated) {
             res.redirect(salesforce
                 .oAuth(req.session.loginUrl)
@@ -68,27 +65,29 @@ if (cluster.isMaster) {
         }
     };
 
+    const formRequestHeader = (req) => Object({
+        bucket: req.session.bucket,
+        orgId: '00DO000000531JPMAY',
+        templateId: req.session.templateId,
+    });
+
     app.get("/token", (req, res) => {
         console.log(req.query.code);
         salesforce.authorize(req.session.loginUrl, req.query.code)
-            .then(() => {
-                req.session.authenticated = true;
-                req.session.save();
-                res.redirect('/');
-            })
-            .catch(() => {
-            });
+        .then(() => {
+            req.session.authenticated = true;
+            req.session.save();
+            res.redirect('/');
+        })
+        .catch(() => {
+        });
     });
 
     app.get('/', saveSession, checkAuth, (req, res) => {
-        var templateRequest = {
-            bucket: req.session.bucket,
-            orgId: '00DO000000531JPMAY',
-            templateId: req.session.templateId,
-        };
-        var getTemplate = templateService.getTemplate(templateRequest);
-        var getUserContext = templateService.getUserContext(templateRequest);
-        var getUserBlocks = templateService.getUserBlocks(templateRequest);
+        var requestHeader = formRequestHeader(req);
+        var getTemplate = templateService.getTemplate(requestHeader);
+        var getUserContext = templateService.getUserContext(requestHeader);
+        var getUserBlocks = templateService.getUserBlocks(requestHeader);
 
         Promise.all([getTemplate, getUserContext, getUserBlocks])
         .then((data) => {
@@ -102,47 +101,36 @@ if (cluster.isMaster) {
 
     app.post("/save", checkAuth, (req, res) => {
         var data = req.body.data;
+        var requestHeader = _.set(formRequestHeader(req), 'data', data);
 
-        templateService.saveTemplate({
-            bucket: req.session.bucket,
-            orgId: '00DO000000531JPMAY',
-            templateId: req.session.templateId,
-            data: data,
-        }).then(() => {
+        templateService.saveTemplate(requestHeader)
+        .then(() => {
             res.send("OK");
         });
     });
 
     app.post("/saveUserContext", checkAuth, (req, res) => {
         var data = req.body.data;
+        var requestHeader = _.set(formRequestHeader(req), 'data', data);
 
-        templateService.saveUserContext({
-            bucket: req.session.bucket,
-            orgId: '00DO000000531JPMAY',
-            templateId: req.session.templateId,
-            data: data,
-        })
+        templateService.saveUserContext(requestHeader)
         .then(() => {
             res.send("OK");
         });
     });
 
     app.post("/saveUserBlock", checkAuth, (req, res) => {
-        var templateRequest = {
-            bucket: req.session.bucket,
-            orgId: '00DO000000531JPMAY',
-            templateId: req.session.templateId,
-        };
+        var requestHeader = formRequestHeader(req);
         var block = req.body.data;
 
-        templateService.getUserBlocks(templateRequest)
+        templateService.getUserBlocks(requestHeader)
         .then(data => {
             // Merge blocks
             var blocks = data;
 
             blocks = _.concat(block, blocks);
 
-            templateService.saveUserBlocks(_.set(templateRequest, 'data', blocks))
+            templateService.saveUserBlocks(_.set(requestHeader, 'data', blocks))
             .then(() => {
                 res.send("OK");
             });
@@ -151,22 +139,18 @@ if (cluster.isMaster) {
     });
 
     app.post("/deleteUserBlock", checkAuth, (req, res) => {
-        var templateRequest = {
-            bucket: req.session.bucket,
-            orgId: '00DO000000531JPMAY',
-            templateId: req.session.templateId,
-        };
+        var requestHeader = formRequestHeader(req);
 
         var name = req.body.data;
 
-        templateService.getUserBlocks(templateRequest)
+        templateService.getUserBlocks(requestHeader)
         .then(data => {
-            // Merge blocks
+            // Delete block
             var blocks = data;
 
             _.remove(blocks, {name: name});
 
-            templateService.saveUserBlocks(_.set(templateRequest, 'data', blocks))
+            templateService.saveUserBlocks(_.set(requestHeader, 'data', blocks))
             .then(() => {
                 res.send("OK");
             });
