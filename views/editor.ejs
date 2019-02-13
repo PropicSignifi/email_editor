@@ -48,9 +48,9 @@
 
       var userBlocks = <%- userBlocks %> ;
 
-      function post(endpoint, data, onSuccess, onError) {
+      function request(method, endpoint, data, onSuccess, onError) {
         var xhttp = new XMLHttpRequest();
-        xhttp.open("POST", "/" + endpoint, true);
+        xhttp.open(method, "/" + endpoint, true);
         xhttp.onreadystatechange = function() {
           if (this.readyState == 4 && this.status == 200) {
             onSuccess();
@@ -58,6 +58,14 @@
         }
         xhttp.setRequestHeader("Content-type", "application/json");
         xhttp.send(JSON.stringify({data : data}));
+      }
+
+      function get(endpoint, data, onSuccess, onError) {
+          request("GET", endpoint, data, onSuccess, onError);
+      }
+
+      function post(endpoint, data, onSuccess, onError) {
+          request("POST", endpoint, data, onSuccess, onError);
       }
 
       function save(code, onSuccess, onError) {
@@ -74,6 +82,10 @@
 
       function deleteUserBlock(name, onSuccess, onError) {
         post("deleteUserBlock", name, onSuccess, onError);
+      }
+
+      function logout(id, onSuccess, onError) {
+        get("logout", id, onSuccess, onError);
       }
 
       var editor = grapesjs.init({
@@ -94,6 +106,7 @@
             userBlocks,
             saveUserBlock,
             deleteUserBlock,
+            logout,
           }
         }
       });

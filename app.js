@@ -149,6 +149,12 @@ if (cluster.isMaster) {
         });
     });
 
+    app.get("/logout", (req, res) => {
+        req.session.authenticated = false;
+        req.session.save();
+        res.redirect("back");
+    });
+
     var port = process.env.PORT || 3000;
 
     var server = app.listen(port, () => {
