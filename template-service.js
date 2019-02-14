@@ -1,4 +1,5 @@
 var AWS = require('aws-sdk');
+var fs = require('fs');
 
 AWS.config.region = process.env.REGION;
 
@@ -24,7 +25,7 @@ const download = (bucket, key) =>
                 console.log('Download Error', err.message);
                 reject(err);
             } else {
-                console.log('Download Sucess');
+                console.log('Download Success');
                 resolve(data);
             }
         });
@@ -40,7 +41,17 @@ const getTemplate = (req) => {
     return download(req.bucket, key)
         .catch(() => {
             console.log('Try a demo template');
-            return download(req.bucket, 'edm/demo.mjml');
+            return new Promise((resolve, reject) => {
+                fs.readFile('public/demo.mjml', 'utf8', (err, data) => {
+                    if (err) {
+                        console.log('Reading demo template error', err.message);
+                        reject(err);
+                    } else {
+                        console.log('Reading demo template success');
+                        resolve({Body: data});
+                    }
+                });
+            });
         }).then(data => data.Body);
 };
 

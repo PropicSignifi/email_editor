@@ -57,14 +57,11 @@ if (cluster.isMaster) {
             if (bucket && /^[0-9A-Za-z]+/.test(bucket)) {
                 req.session.authenticated = true;
                 req.session.save();
-                next();
             } else {
                 console.log('Authentication failed');
-                res.status(401).send('Authentication failed')
             }
-        } else {
-            next();
         }
+        next();
     };
 
     const formRequestHeader = (req) => Object({
@@ -96,6 +93,7 @@ if (cluster.isMaster) {
                 template: data[0],
                 userContext: JSON.stringify(data[1]),
                 userBlocks: JSON.stringify(data[2]),
+                readOnly: !req.session.authenticated,
             });
         });
     });
