@@ -76,7 +76,12 @@ if (cluster.isMaster) {
         var decipher = crypto.createDecipheriv('aes-256-cbc',
             Buffer.from(config.aesKey, 'hex'),
             Buffer.from(config.aesIv, 'hex'));
-        var clear = decipher.update(cipher, 'hex', 'utf8') + decipher.final('utf8');
+        try {
+            clear = decipher.update(cipher, 'hex', 'utf8');
+            clear += decipher.final('utf8');
+        } catch(err) {
+            console.log('Decrypting Error', err.message);
+        }
 
         return clear;
     };
