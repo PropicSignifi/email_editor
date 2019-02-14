@@ -27,31 +27,42 @@ if (cluster.isMaster) {
     var cookieSession = require('cookie-session');
     var cookieParser = require('cookie-parser');
     var bodyParser = require('body-parser');
-    var salesforce = require('./salesforce');
     var templateService = require('./template-service');
+    var config = require('./config');
     var _ = require('lodash');
+    var crypto = require('crypto');
 
     var app = express();
 
-    app.set("view engine", "ejs");
-    app.set("views", __dirname + "/views");
+    app.set('view engine', 'ejs');
+    app.set('views', __dirname + '/views');
     app.use(express.static(__dirname + '/public'));
-    app.use(cookieSession({name: "session", keys: ['secret']}));
+    app.use(cookieSession({name: 'session', keys: ['secret']}));
     app.use(cookieParser());
     app.use(bodyParser.json());
     app.use(bodyParser.urlencoded({extended:false}));
 
     const saveSession = (req, res, next) => {
-        _.defaultsDeep(req.session, req.query);
+        _.defaults(req.session, {
+            bucket: req.query.bucket,
+            path: decrypt(req.query.path),
+            loginUrl: req.query.bucket,
+            templateId: req.query.templateId,
+        });
         next();
     };
 
     const checkAuth = (req, res, next) => {
         if (!req.session.authenticated) {
-            res.redirect(salesforce
-                .oAuth(req.session.loginUrl)
-                .getAuthorizationUrl({
-                    scope: "api id web refresh_token"}));
+            var path = req.session.path;
+            if (path && _.startsWith(path, '00D')) {
+                req.session.authenticated = true;
+                req.session.save();
+                next();
+            } else {
+                console.log('Authentication failed');
+                res.status(401).send('Authentication failed')
+            }
         } else {
             next();
         }
@@ -59,21 +70,18 @@ if (cluster.isMaster) {
 
     const formRequestHeader = (req) => Object({
         bucket: req.session.bucket,
-        orgId: req.session.orgId,
+        path: req.session.path,
         templateId: req.session.templateId,
     });
 
-    app.get("/token", (req, res) => {
-        console.log(req.query.code);
-        salesforce.authorize(req.session.loginUrl, req.query.code)
-        .then(() => {
-            req.session.authenticated = true;
-            req.session.save();
-            res.redirect('/');
-        })
-        .catch(() => {
-        });
-    });
+    const decrypt = (cipher) => {
+        var decipher = crypto.createDecipheriv('aes-256-cbc',
+            Buffer.from(config.aesKey, 'hex'),
+            Buffer.from(config.aesIv, 'hex'));
+        var clear = decipher.update(cipher, 'hex', 'utf8') + decipher.final('utf8');
+
+        return clear;
+    };
 
     app.get('/', saveSession, checkAuth, (req, res) => {
         var requestHeader = formRequestHeader(req);
@@ -83,7 +91,7 @@ if (cluster.isMaster) {
 
         Promise.all([getTemplate, getUserContext, getUserBlocks])
         .then((data) => {
-            res.render("editor", {
+            res.render('editor', {
                 template: data[0],
                 userContext: JSON.stringify(data[1]),
                 userBlocks: JSON.stringify(data[2]),
@@ -91,27 +99,27 @@ if (cluster.isMaster) {
         });
     });
 
-    app.post("/save", checkAuth, (req, res) => {
+    app.post('/save', checkAuth, (req, res) => {
         var data = req.body.data;
         var requestHeader = _.set(formRequestHeader(req), 'data', data);
 
         templateService.saveTemplate(requestHeader)
         .then(() => {
-            res.send("OK");
+            res.send('OK');
         });
     });
 
-    app.post("/saveUserContext", checkAuth, (req, res) => {
+    app.post('/saveUserContext', checkAuth, (req, res) => {
         var data = req.body.data;
         var requestHeader = _.set(formRequestHeader(req), 'data', data);
 
         templateService.saveUserContext(requestHeader)
         .then(() => {
-            res.send("OK");
+            res.send('OK');
         });
     });
 
-    app.post("/saveUserBlock", checkAuth, (req, res) => {
+    app.post('/saveUserBlock', checkAuth, (req, res) => {
         var requestHeader = formRequestHeader(req);
         var block = req.body.data;
 
@@ -124,13 +132,13 @@ if (cluster.isMaster) {
 
             templateService.saveUserBlocks(_.set(requestHeader, 'data', blocks))
             .then(() => {
-                res.send("OK");
+                res.send('OK');
             });
         });
 
     });
 
-    app.post("/deleteUserBlock", checkAuth, (req, res) => {
+    app.post('/deleteUserBlock', checkAuth, (req, res) => {
         var requestHeader = formRequestHeader(req);
 
         var name = req.body.data;
@@ -144,18 +152,18 @@ if (cluster.isMaster) {
 
             templateService.saveUserBlocks(_.set(requestHeader, 'data', blocks))
             .then(() => {
-                res.send("OK");
+                res.send('OK');
             });
         });
     });
 
-    app.get("/logout", (req, res) => {
+    app.get('/logout', (req, res) => {
         req.session.authenticated = false;
         req.session.save();
-        res.redirect("back");
+        res.redirect('back');
     });
 
-    var port = process.env.PORT || 3000;
+    var port = config.port;
 
     var server = app.listen(port, () => {
         console.log('Server running at http://127.0.0.1:' + port + '/');

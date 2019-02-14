@@ -10,5 +10,5 @@ package-lock.json
 # AWS files
 iam_policy.json
 
-# VIM files
-.*.swp
+# Local files
+.*

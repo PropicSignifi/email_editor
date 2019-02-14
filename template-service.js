@@ -8,10 +8,10 @@ const upload = (bucket, key, data) =>
     new Promise((resolve, reject) => {
         s3.upload({Bucket: bucket, Key: key, Body: data}, (err, data) => {
             if (err) {
-                console.log("Upload Error", err.message);
+                console.log('Upload Error', err.message);
                 reject(err);
             } else {
-                console.log("Upload Success", data.Location);
+                console.log('Upload Success', data.Location);
                 resolve(data);
             }
         });
@@ -21,45 +21,45 @@ const download = (bucket, key) =>
     new Promise((resolve, reject) => {
         s3.getObject({Bucket: bucket, Key: key}, (err, data) => {
             if (err) {
-                console.log("Download Error", err.message);
+                console.log('Download Error', err.message);
                 reject(err);
             } else {
-                console.log("Download Sucess");
+                console.log('Download Sucess');
                 resolve(data);
             }
         });
     });
 
 const saveTemplate = (req) => {
-    var key = "edm/" + req.orgId + "/" + req.templateId + ".mjml";
+    var key = 'edm/' + req.path + '/' + req.templateId + '.mjml';
     return upload(req.bucket, key, req.data);
 };
 
 const getTemplate = (req) => {
-    var key = "edm/" + req.orgId + "/" + req.templateId + ".mjml";
+    var key = 'edm/' + req.path + '/' + req.templateId + '.mjml';
     return download(req.bucket, key)
         .catch(() => {
-            console.log("Try a demo template");
-            return download(req.bucket, "edm/demo.mjml");
+            console.log('Try a demo template');
+            return download(req.bucket, 'edm/demo.mjml');
         }).then(data => data.Body);
 };
 
 const saveUserContext = (req) => {
-    var key = "edm/" + req.orgId + "/" + req.templateId + ".data.json";
+    var key = 'edm/' + req.path + '/' + req.templateId + '.data.json';
     return upload(req.bucket, key, JSON.stringify(req.data));
 };
 
 const getUserContext = (req) => {
-    var key = "edm/" + req.orgId + "/" + req.templateId + ".data.json";
+    var key = 'edm/' + req.path + '/' + req.templateId + '.data.json';
     return download(req.bucket, key)
         .catch(() => {
-            console.log("Use the demo data");
+            console.log('Use the demo data');
             var userContext = [
                     {
-                        "name": "title",
-                        "label": "Title",
-                        "type": "Text",
-                        "value": "Sample Title"
+                        'name': 'title',
+                        'label': 'Title',
+                        'type': 'Text',
+                        'value': 'Sample Title'
                     }
                 ];
             return {Body: JSON.stringify(userContext)};
@@ -67,15 +67,15 @@ const getUserContext = (req) => {
 };
 
 const saveUserBlocks = (req) => {
-    var key = "edm/" + req.orgId + "/" + req.templateId + ".block.json";
+    var key = 'edm/' + req.path + '/' + req.templateId + '.block.json';
     return upload(req.bucket, key, JSON.stringify(req.data));
 };
 
 const getUserBlocks = (req) => {
-    var key = "edm/" + req.orgId + "/" + req.templateId + ".block.json";
+    var key = 'edm/' + req.path + '/' + req.templateId + '.block.json';
     return download(req.bucket, key)
         .catch(() => {
-            console.log("Use the demo block");
+            console.log('Use the demo block');
             var userBlocks = [
                 {
                     id: '1',
