@@ -44,8 +44,8 @@ if (cluster.isMaster) {
 
     const saveSession = (req, res, next) => {
         _.defaults(req.session, {
-            bucket: req.query.bucket,
-            path: decrypt(req.query.path),
+            bucket: decrypt(req.query.bucket),
+            path: req.query.path,
             templateId: req.query.templateId,
         });
         next();
@@ -53,8 +53,8 @@ if (cluster.isMaster) {
 
     const checkAuth = (req, res, next) => {
         if (!req.session.authenticated) {
-            var path = req.session.path;
-            if (path && _.startsWith(path, '00D')) {
+            var bucket = req.session.bucket;
+            if (bucket && /^[0-9A-Za-z]+/.test(bucket)) {
                 req.session.authenticated = true;
                 req.session.save();
                 next();
@@ -74,6 +74,8 @@ if (cluster.isMaster) {
     });
 
     const decrypt = (cipher) => {
+        if (!cipher) return undefined;
+
         var decipher = crypto.createDecipheriv('aes-256-cbc',
             Buffer.from(config.aesKey, 'hex'),
             Buffer.from(config.aesIv, 'hex'));
@@ -158,6 +160,7 @@ if (cluster.isMaster) {
 
     app.get('/logout', (req, res) => {
         req.session.authenticated = false;
+        req.session.bucket = undefined;
         req.session.save();
         res.redirect('back');
     });
