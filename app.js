@@ -46,7 +46,6 @@ if (cluster.isMaster) {
         _.defaults(req.session, {
             bucket: req.query.bucket,
             path: decrypt(req.query.path),
-            loginUrl: req.query.bucket,
             templateId: req.query.templateId,
         });
         next();
