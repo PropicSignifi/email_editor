@@ -24,73 +24,40 @@ if (cluster.isMaster) {
 // Code to run if we're in a worker process
 } else {
     var express = require('express');
+    var bodyParser = require('body-parser');
     var cookieSession = require('cookie-session');
     var cookieParser = require('cookie-parser');
-    var bodyParser = require('body-parser');
+    var _ = require('lodash');
+    var sessionService = require('./session-service');
     var templateService = require('./template-service');
     var config = require('./config');
-    var _ = require('lodash');
-    var crypto = require('crypto');
 
     var app = express();
 
     app.set('view engine', 'ejs');
     app.set('views', __dirname + '/views');
     app.use(express.static(__dirname + '/public'));
-    app.use(cookieSession({name: 'session', keys: ['secret']}));
+    app.use(cookieSession({
+        name: 'session',
+        keys: ['secret'],
+        cookie: {
+            secure: true,
+            expires: new Date(Date.now() + 60 * 60 * 1000),
+        },
+    }));
     app.use(cookieParser());
     app.use(bodyParser.json());
     app.use(bodyParser.urlencoded({extended:false}));
 
     const saveSession = (req, res, next) => {
-        _.defaults(req.session, {
-            bucket: decrypt(req.query.bucket),
-            path: req.query.path,
-            templateId: req.query.templateId,
-        });
+        sessionService.saveSession(req);
         next();
     };
 
-    const checkAuth = (req, res, next) => {
-        if (!req.session.authenticated) {
-            var bucket = req.session.bucket;
-            if (bucket && /^[0-9A-Za-z]+/.test(bucket)) {
-                req.session.authenticated = true;
-                req.session.save();
-            } else {
-                console.log('Authentication failed');
-            }
-        }
-        next();
-    };
-
-    const formRequestHeader = (req) => Object({
-        bucket: req.session.bucket,
-        path: req.session.path,
-        templateId: req.session.templateId,
-    });
-
-    const decrypt = (cipher) => {
-        if (!cipher) return undefined;
-
-        var decipher = crypto.createDecipheriv('aes-256-cbc',
-            Buffer.from(config.aesKey, 'hex'),
-            Buffer.from(config.aesIv, 'hex'));
-        try {
-            clear = decipher.update(cipher, 'hex', 'utf8');
-            clear += decipher.final('utf8');
-        } catch(err) {
-            console.log('Decrypting Error', err.message);
-        }
-
-        return clear;
-    };
-
-    app.get('/', saveSession, checkAuth, (req, res) => {
-        var requestHeader = formRequestHeader(req);
-        var getTemplate = templateService.getTemplate(requestHeader);
-        var getUserContext = templateService.getUserContext(requestHeader);
-        var getUserBlocks = templateService.getUserBlocks(requestHeader);
+    app.get('/', saveSession, (req, res) => {
+        var getTemplate = templateService.getTemplate(req.session);
+        var getUserContext = templateService.getUserContext(req.session);
+        var getUserBlocks = templateService.getUserBlocks(req.session);
 
         Promise.all([getTemplate, getUserContext, getUserBlocks])
         .then((data) => {
@@ -98,73 +65,77 @@ if (cluster.isMaster) {
                 template: data[0],
                 userContext: JSON.stringify(data[1]),
                 userBlocks: JSON.stringify(data[2]),
-                readOnly: !req.session.authenticated,
+                readOnly: sessionService.readOnly(req.session),
             });
         });
     });
 
-    app.post('/save', checkAuth, (req, res) => {
+    app.post('/save', (req, res) => {
         var data = req.body.data;
-        var requestHeader = _.set(formRequestHeader(req), 'data', data);
-
-        templateService.saveTemplate(requestHeader)
+        templateService.saveTemplate(req.session, data)
         .then(() => {
             res.send('OK');
+        })
+        .catch((err) => {
+            console.log('Saving Template Error', err.message);
         });
     });
 
-    app.post('/saveUserContext', checkAuth, (req, res) => {
+    app.post('/saveUserContext', (req, res) => {
         var data = req.body.data;
-        var requestHeader = _.set(formRequestHeader(req), 'data', data);
 
-        templateService.saveUserContext(requestHeader)
+        templateService.saveUserContext(req.session, data)
         .then(() => {
             res.send('OK');
+        })
+        .catch((err) => {
+            console.log('Saving User Context Error', err.message);
         });
     });
 
-    app.post('/saveUserBlock', checkAuth, (req, res) => {
-        var requestHeader = formRequestHeader(req);
+    app.post('/saveUserBlock', (req, res) => {
         var block = req.body.data;
 
-        templateService.getUserBlocks(requestHeader)
+        templateService.getUserBlocks(req.session, block)
         .then(data => {
             // Merge blocks
             var blocks = data;
 
             blocks = _.concat(block, blocks);
 
-            templateService.saveUserBlocks(_.set(requestHeader, 'data', blocks))
+            templateService.saveUserBlocks(req.session, blocks)
             .then(() => {
                 res.send('OK');
             });
+        })
+        .catch((err) => {
+            console.log('Saving User Block Error', err.message);
         });
 
     });
 
-    app.post('/deleteUserBlock', checkAuth, (req, res) => {
-        var requestHeader = formRequestHeader(req);
-
+    app.post('/deleteUserBlock', (req, res) => {
         var name = req.body.data;
 
-        templateService.getUserBlocks(requestHeader)
+        templateService.getUserBlocks(req.session)
         .then(data => {
             // Delete block
             var blocks = data;
 
             _.remove(blocks, {name: name});
 
-            templateService.saveUserBlocks(_.set(requestHeader, 'data', blocks))
+            templateService.saveUserBlocks(req.session, blocks)
             .then(() => {
                 res.send('OK');
             });
+        })
+        .catch((err) => {
+            console.log('Deleting User Block Error', err.message);
         });
     });
 
     app.get('/logout', (req, res) => {
-        req.session.authenticated = false;
-        req.session.bucket = undefined;
-        req.session.save();
+        sessionService.logout(req.session);
         res.redirect('back');
     });
 
