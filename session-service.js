@@ -8,33 +8,47 @@ const decrypt = (cipher) => {
         Buffer.from(config.aesIv, 'hex')
     );
 
-    var clear;
-
     try {
-        clear = decipher.update(cipher, 'hex', 'utf8');
-        clear += decipher.final('utf8');
+        var clear = decipher.update(cipher, 'hex', 'utf8') + decipher.final('utf8');
+        return clear;
     } catch(err) {
         console.log('Decryption Error', err.message);
+        return undefined;
     }
 
-    return clear;
 };
 
 const saveSession = (req) => {
+    if (!req.query.query) {
+        console.log('Bad request');
+        return;
+    }
+
+    var query;
+
+    try {
+        query = JSON.parse(decrypt(req.query.query));
+    } catch(err) {
+        console.log('Bad JSON format', err.message);
+        return;
+    }
+
     _.defaults(req.session, {
-        bucket: decrypt(req.query.bucket),
-        path: req.query.path,
-        templateId: req.query.templateId,
+        bucket: query.bucket,
+        path: query.path,
+        templateId: query.templateId,
     });
     req.session.save();
 };
 
 const logout = (session) => {
     session.bucket = undefined;
+    session.path = undefined;
+    session.templateId = undefined;
     session.save();
 };
 
-const readOnly = (session) => !session.bucket;
+const readOnly = (session) => !session.bucket || !session.path || !session.templateId;
 
 const sessionService = {
     saveSession: saveSession,
