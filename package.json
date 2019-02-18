@@ -5,6 +5,7 @@
   "dependencies": {
     "aws-sdk": "latest",
     "body-parser": "latest",
+    "dotenv": "latest",
     "ejs": "latest",
     "express": "latest",
     "cookie-parser": "latest",
