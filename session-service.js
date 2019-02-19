@@ -1,6 +1,7 @@
 var crypto = require('crypto');
 var _ = require('lodash');
 var config = require('./config');
+var moment = require('moment');
 
 const decrypt = (cipher) => {
     var decipher = crypto.createDecipheriv('aes-256-cbc',
@@ -37,6 +38,8 @@ const saveSession = (req) => {
         bucket: query.bucket,
         path: query.path,
         templateId: query.templateId,
+        timestamp: query.timestamp,
+        ttl: query.ttl,
     });
     req.session.save();
 };
@@ -48,7 +51,11 @@ const logout = (session) => {
     session.save();
 };
 
-const readOnly = (session) => !session.bucket || !session.path || !session.templateId;
+const readOnly = (session) => {
+    var timeout = moment(parseInt(session.timestamp)).add(session.ttl, 'seconds') < moment();
+    console.log(timeout);
+    return !session.bucket || !session.path || !session.templateId || timeout;
+};
 
 const sessionService = {
     saveSession: saveSession,

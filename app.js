@@ -28,6 +28,7 @@ if (cluster.isMaster) {
     var cookieSession = require('cookie-session');
     var cookieParser = require('cookie-parser');
     var _ = require('lodash');
+    var moment = require('moment');
     var sessionService = require('./session-service');
     var templateService = require('./template-service');
     var config = require('./config');
@@ -42,7 +43,7 @@ if (cluster.isMaster) {
         keys: ['secret'],
         cookie: {
             secure: true,
-            expires: new Date(Date.now() + 60 * 60 * 1000),
+            expires: moment().add(1, 'days'),
         },
     }));
     app.use(cookieParser());
