@@ -10,7 +10,7 @@
     "express": "latest",
     "cookie-parser": "latest",
     "cookie-session": "latest",
-    "jsforce": "latest",
+    "moment": "latest",
     "lodash": "latest"
   },
   "scripts": {
