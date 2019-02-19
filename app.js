@@ -140,7 +140,7 @@ if (cluster.isMaster) {
         res.redirect('back');
     });
 
-    var port = config.port;
+    var port = process.env.PORT || 3000;
 
     var server = app.listen(port, () => {
         console.log('Server running at http://127.0.0.1:' + port + '/');
