@@ -32,12 +32,12 @@ const download = (bucket, key) =>
     });
 
 const saveTemplate = (session, data) => {
-    var key = 'edm/' + session.path + '/' + session.templateId + '.mjml';
+    var key = session.path + '/' + session.templateId + '.mjml';
     return upload(session.bucket, key, data);
 };
 
 const getTemplate = (session) => {
-    var key = 'edm/' + session.path + '/' + session.templateId + '.mjml';
+    var key = session.path + '/' + session.templateId + '.mjml';
     return download(session.bucket, key)
         .catch(() => {
             console.log('Try a demo template');
@@ -56,12 +56,12 @@ const getTemplate = (session) => {
 };
 
 const saveUserContext = (session, data) => {
-    var key = 'edm/' + session.path + '/' + session.templateId + '.data.json';
+    var key = session.path + '/' + session.templateId + '.data.json';
     return upload(session.bucket, key, JSON.stringify(data));
 };
 
 const getUserContext = (session) => {
-    var key = 'edm/' + session.path + '/' + session.templateId + '.data.json';
+    var key = session.path + '/' + session.templateId + '.data.json';
     return download(session.bucket, key)
         .catch(() => {
             console.log('Use the demo data');
@@ -78,12 +78,12 @@ const getUserContext = (session) => {
 };
 
 const saveUserBlocks = (session, data) => {
-    var key = 'edm/' + session.path + '/' + session.templateId + '.block.json';
+    var key = session.path + '/' + session.userId + '.block.json';
     return upload(session.bucket, key, JSON.stringify(data));
 };
 
 const getUserBlocks = (session) => {
-    var key = 'edm/' + session.path + '/' + session.templateId + '.block.json';
+    var key = session.path + '/' + session.userId + '.block.json';
     return download(session.bucket, key)
         .catch(() => {
             console.log('Use the demo block');
