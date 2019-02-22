@@ -33,11 +33,13 @@ const download = (bucket, key) =>
 
 const saveTemplate = (session, data) => {
     var key = session.path + '/' + session.templateId + '.mjml';
+    console.log('Saving to: ', key);
     return upload(session.bucket, key, data);
 };
 
 const getTemplate = (session) => {
     var key = session.path + '/' + session.templateId + '.mjml';
+    console.log('Retrieving from: ', key);
     return download(session.bucket, key)
         .catch(() => {
             console.log('Try a demo template');
@@ -57,11 +59,13 @@ const getTemplate = (session) => {
 
 const saveUserContext = (session, data) => {
     var key = session.path + '/' + session.templateId + '.data.json';
+    console.log('Saving to: ', key);
     return upload(session.bucket, key, JSON.stringify(data));
 };
 
 const getUserContext = (session) => {
     var key = session.path + '/' + session.templateId + '.data.json';
+    console.log('Retrieving from: ', key);
     return download(session.bucket, key)
         .catch(() => {
             console.log('Use the demo data');
@@ -79,11 +83,13 @@ const getUserContext = (session) => {
 
 const saveUserBlocks = (session, data) => {
     var key = session.path + '/' + session.userId + '.block.json';
+    console.log('Saving to: ', key);
     return upload(session.bucket, key, JSON.stringify(data));
 };
 
 const getUserBlocks = (session) => {
     var key = session.path + '/' + session.userId + '.block.json';
+    console.log('Retrieving from: ', key);
     return download(session.bucket, key)
         .catch(() => {
             console.log('Use the demo block');
