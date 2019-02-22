@@ -34,7 +34,7 @@ const saveSession = (req) => {
         return;
     }
 
-    _.defaults(req.session, {
+    _.assign(req.session, {
         bucket: query.bucket,
         path: query.path,
         templateId: query.templateId,
