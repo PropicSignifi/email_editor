@@ -31,6 +31,7 @@ const saveSession = (req) => {
         query = JSON.parse(decrypt(req.query.query));
     } catch(err) {
         console.log('Bad JSON format', err.message);
+        logout(req.session);
         return;
     }
 
