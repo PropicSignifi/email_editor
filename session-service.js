@@ -39,7 +39,6 @@ const saveSession = (req) => {
         bucket: query.bucket,
         path: query.path,
         templateId: query.templateId,
-        userId: query.userId,
         timestamp: query.timestamp,
         ttl: query.ttl,
     });
@@ -50,7 +49,6 @@ const logout = (session) => {
     session.bucket = undefined;
     session.path = undefined;
     session.templateId = undefined;
-    session.userId = undefined;
     session.timestamp = undefined;
     session.ttl = undefined;
     session.save();

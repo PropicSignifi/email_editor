@@ -82,13 +82,13 @@ const getUserContext = (session) => {
 };
 
 const saveUserBlocks = (session, data) => {
-    var key = session.path + '/' + session.userId + '.block.json';
+    var key = session.path + '/block.json';
     console.log('Saving to: ', key);
     return upload(session.bucket, key, JSON.stringify(data));
 };
 
 const getUserBlocks = (session) => {
-    var key = session.path + '/' + session.userId + '.block.json';
+    var key = session.path + '/block.json';
     console.log('Retrieving from: ', key);
     return download(session.bucket, key)
         .catch(() => {
