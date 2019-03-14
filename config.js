@@ -1,6 +1,6 @@
 var dotenv = require('dotenv');
 
-dotenv.load();
+dotenv.config();
 
 const config = {
     aesKey: process.env.AES_KEY || '0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef',
