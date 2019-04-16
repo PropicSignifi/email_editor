@@ -30,7 +30,7 @@ if (cluster.isMaster) {
     var _ = require('lodash');
     var moment = require('moment');
     var sessionService = require('./session-service');
-    var templateService = require('./template-service');
+    var awsService = require('./aws-service');
     var config = require('./config');
 
     var app = express();
@@ -56,9 +56,9 @@ if (cluster.isMaster) {
     };
 
     app.get('/', saveSession, (req, res) => {
-        var getTemplate = templateService.getTemplate(req.session);
-        var getUserContext = templateService.getUserContext(req.session);
-        var getUserBlocks = templateService.getUserBlocks(req.session);
+        var getTemplate = awsService.getTemplate(req.session);
+        var getUserContext = awsService.getUserContext(req.session);
+        var getUserBlocks = awsService.getUserBlocks(req.session);
 
         Promise.all([getTemplate, getUserContext, getUserBlocks])
         .then((data) => {
@@ -73,7 +73,7 @@ if (cluster.isMaster) {
 
     app.post('/save', (req, res) => {
         var data = req.body.data;
-        templateService.saveTemplate(req.session, data)
+        awsService.saveTemplate(req.session, data)
         .then(() => {
             res.send('OK');
         })
@@ -85,7 +85,7 @@ if (cluster.isMaster) {
     app.post('/saveUserContext', (req, res) => {
         var data = req.body.data;
 
-        templateService.saveUserContext(req.session, data)
+        awsService.saveUserContext(req.session, data)
         .then(() => {
             res.send('OK');
         })
@@ -97,14 +97,14 @@ if (cluster.isMaster) {
     app.post('/saveUserBlock', (req, res) => {
         var block = req.body.data;
 
-        templateService.getUserBlocks(req.session, block)
+        awsService.getUserBlocks(req.session, block)
         .then(data => {
             // Merge blocks
             var blocks = data;
 
             blocks = _.concat(block, blocks);
 
-            templateService.saveUserBlocks(req.session, blocks)
+            awsService.saveUserBlocks(req.session, blocks)
             .then(() => {
                 res.send('OK');
             });
@@ -118,14 +118,14 @@ if (cluster.isMaster) {
     app.post('/deleteUserBlock', (req, res) => {
         var name = req.body.data;
 
-        templateService.getUserBlocks(req.session)
+        awsService.getUserBlocks(req.session)
         .then(data => {
             // Delete block
             var blocks = data;
 
             _.remove(blocks, {name: name});
 
-            templateService.saveUserBlocks(req.session, blocks)
+            awsService.saveUserBlocks(req.session, blocks)
             .then(() => {
                 res.send('OK');
             });
