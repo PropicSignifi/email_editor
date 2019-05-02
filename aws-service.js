@@ -33,7 +33,7 @@ const download = (bucket, key) =>
 
 const saveTemplate = (session, data) => {
     var key = session.path + '/' + session.templateId + '.mjml';
-    console.log('Saving to: ', key);
+    console.log('Saving to: ', session.bucket, key);
     return upload(session.bucket, key, data);
 };
 
