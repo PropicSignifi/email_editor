@@ -7,7 +7,7 @@ var s3 = new AWS.S3();
 
 const upload = (bucket, key, data) =>
     new Promise((resolve, reject) => {
-        s3.upload({Bucket: bucket, Key: key, Body: data}, (err, data) => {
+        s3.upload({Bucket: bucket, Key: key, Body: data, ACL: 'public-read'}, (err, data) => {
             if (err) {
                 console.log('Upload Error', err.message);
                 reject(err);
