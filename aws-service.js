@@ -69,14 +69,19 @@ const getUserContext = (session) => {
     return download(session.bucket, key)
         .catch(() => {
             console.log('Use the demo data');
-            var userContext = [
+            var userContext = {
+                variables: [
                     {
                         'name': 'title',
                         'label': 'Title',
                         'type': 'Text',
                         'value': 'Sample Title'
                     }
-                ];
+                ],
+                layout: [
+                    'title',
+                ],
+            };
             return {Body: JSON.stringify(userContext)};
         }).then(data => JSON.parse(data.Body));
 };
